@@ -19,7 +19,6 @@ import environ
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Loading the enviroment variables from file
 env = environ.Env()
 env.read_env(path.join(BASE_DIR, '.env.production'))
@@ -145,7 +144,7 @@ DATABASES = {
         'NAME': env('NAME'),
         'USER': env('USER'),
         'PASSWORD': env('PASSWORD'),
-        'PORT': env('PORT'),
+        'PORT': 5432,
 
     }
 
