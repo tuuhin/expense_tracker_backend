@@ -19,6 +19,7 @@ import environ
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
 # Loading the enviroment variables from file
 env = environ.Env()
 env.read_env(path.join(BASE_DIR, '.env.production'))
