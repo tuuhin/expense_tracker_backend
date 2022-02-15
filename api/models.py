@@ -47,4 +47,4 @@ class Expenses(models.Model):
         ordering = ('-added_at',)
 
     def __str__(self):
-        return self.expense_titlte
+        return self.expense_title
