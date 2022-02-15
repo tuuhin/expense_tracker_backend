@@ -10,7 +10,6 @@ class Source(models.Model):
     def __str__(self):
         return self.source_title
 
-
 class Category(models.Model):
     category_title = models.CharField(max_length=50)
     category_desc = models.CharField(max_length=250, blank=True,null=True)
