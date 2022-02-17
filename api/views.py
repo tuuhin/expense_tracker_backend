@@ -52,6 +52,7 @@ def income(request):
         data['user'] = request.user.pk
         serialized_income = IncomeSerializer(data=data)
         if serialized_income.is_valid():
+            serialized_income.save()
             return Response(serialized_income.data, status=status.HTTP_201_CREATED)
         return Response(serialized_income.errors, status=status.HTTP_400_BAD_REQUEST)
 
