@@ -111,7 +111,7 @@ def expenses(request):
         
     if request.method == 'POST':
         data = request.data
-        data['user'] = request.user
+        data['user'] = request.user.pk
         serialized_expense = ExpenseSerializer(data=data)
         if serialized_expense.is_valid():
             serialized_expense.save()
