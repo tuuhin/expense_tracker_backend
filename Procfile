@@ -1,1 +1,1 @@
-web: gunicorn expense_tracker.asgi --log-file -
+web: daphne expense_tracker.asgi:application --port 8888  -v2
