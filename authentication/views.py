@@ -13,7 +13,6 @@ async def register_users(request):
         return Response({'user': user.data, **tokens}, status=status.HTTP_201_CREATED)
     return Response(user.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
 @api_view(http_method_names=['POST'])
 @permission_classes([IsAuthenticated])
 async def change_password(request):
