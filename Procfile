@@ -1,1 +1,1 @@
-web: daphne expense_tracker.asgi:application --port $PORT --bind 0.0.0.0 -v2
+web: daphne expense_tracker.asgi:application --port 8000 --bind 0.0.0.0 -v2
