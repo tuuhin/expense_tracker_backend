@@ -38,7 +38,7 @@ ALLOWED_HOSTS = [env('ALLOWED_HOST'),
 # Application definition
 
 INSTALLED_APPS = [
-    'channels',
+   
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -124,7 +124,7 @@ TEMPLATES = [
     },
 ]
 
-ASGI_APPLICATION = 'expense_tracker.asgi.application'
+WSGI_APPLICATION = 'expense_tracker.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
