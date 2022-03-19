@@ -1,9 +1,10 @@
-from rest_framework.serializers import ModelSerializer, CharField, Serializer
+from rest_framework import serializers
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
 def get_tokens_for_user(user):
+    # get tokens from user data
     refresh = RefreshToken.for_user(user)
     return {
         'refresh': str(refresh),
@@ -11,8 +12,8 @@ def get_tokens_for_user(user):
     }
 
 
-class UserSerializer(ModelSerializer):
-    
+class UserSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = User
         fields = ('id', 'username', 'password',
@@ -28,6 +29,7 @@ class UserSerializer(ModelSerializer):
         return tokens
 
 
-class ChangePasswordSerializer(Serializer):
-    old_password = CharField(required=True)
-    new_password = CharField(required=True)
+class ChangePasswordSerializer(serializers.Serializer):
+
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)

@@ -4,8 +4,9 @@ from .serializers import ChangePasswordSerializer, UserSerializer
 from rest_framework.response import Response
 from rest_framework import status
 
+
 @api_view(http_method_names=['POST'])
-async def register_users(request):
+def register_users(request):
     user = UserSerializer(data=request.data)
     if user.is_valid():
         user.save()
@@ -13,9 +14,10 @@ async def register_users(request):
         return Response({'user': user.data, **tokens}, status=status.HTTP_201_CREATED)
     return Response(user.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 @api_view(http_method_names=['POST'])
 @permission_classes([IsAuthenticated])
-async def change_password(request):
+def change_password(request):
     user = request.user
     serializer = ChangePasswordSerializer(data=request.data)
     if serializer.is_valid():
@@ -24,9 +26,10 @@ async def change_password(request):
             return Response({
                 "data": "The applied password is a wrong one please apply the correct one "
             }, status=status.HTTP_400_BAD_REQUEST)
-        user.set_password(serializer.data.get('new_password'))
-        user.save()
-        return Response({'data': 'your password has been changed '}, status=status.HTTP_200_OK)
+        new_password = serializer.data.get('new_password')
+        if new_password:
+            user.set_password(serializer.data.get('new_password'))
+            user.save()
+            return Response({'data': 'your password has been changed '}, status=status.HTTP_200_OK)
+        return Response({'data': 'new_password is not found'}, status=status.HTTP_304_NOT_MODIFIED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
