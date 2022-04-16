@@ -5,6 +5,18 @@ from rest_framework.response import Response
 from rest_framework import status
 
 
+@api_view(http_method_names=["PUT"])
+@permission_classes([IsAuthenticated])
+def update_profile(request):
+    return Response({})
+
+
+@api_view(http_method_names=["DELETE"])
+@permission_classes([IsAuthenticated])
+def delete_profile(request):
+    return Response({})
+
+
 @api_view(http_method_names=['POST'])
 def register_users(request):
     user = UserSerializer(data=request.data)

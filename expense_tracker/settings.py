@@ -19,8 +19,7 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True if env('DEBUG') == 'True' else False
 
-ALLOWED_HOSTS = [env('ALLOWED_HOST'),
-                 '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ["*"]
 
 # Application definition
 
@@ -33,11 +32,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     "corsheaders",
-    'api',
-    'base',
+    'api.apps.ApiConfig',
+    'base.apps.BaseConfig',
+    'plans',
     'rest_framework',
     'rest_framework_simplejwt',
     'drf_multiple_model',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -181,3 +182,13 @@ STATICFILES_DIRS = (path.join(BASE_DIR, 'staticfiles'),)
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOW_ALL_ORIGINS = True
+
+# AWS STUFF FOR THE STORAGE BUCKETS
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+AWS_ACCESS_KEY_ID = env('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = env("AWS_SECRET_ACCESS_KEY")
+AWS_STORAGE_BUCKET_NAME = env("AWS_STORAGE_BUCKET_NAME")
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
+AWS_S3_REGION_NAME = env('AWS_S3_REGION_NAME')
+AWS_S3_SIGNATURE_VERSION = env('AWS_S3_SIGNATURE_VERSION')
