@@ -34,7 +34,7 @@ INSTALLED_APPS = [
     "corsheaders",
     'api.apps.ApiConfig',
     'base.apps.BaseConfig',
-    'plans',
+
     'rest_framework',
     'rest_framework_simplejwt',
     'drf_multiple_model',
@@ -56,7 +56,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'expense_tracker.urls'
 
 REST_FRAMEWORK = {
-
+    'DATETIME_FORMAT': "%c",
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ), 'DEFAULT_PERMISSION_CLASSES': [
@@ -65,8 +65,8 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
-    'REFRESH_TOKEN_LIFETIME': timedelta(hours=1),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=int(env("ACCESS_TOKEN_LIFETIME"))),
+    'REFRESH_TOKEN_LIFETIME': timedelta(hours=int(env("REFRESH_TOKEN_LIFETIME"))),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': False,
     'UPDATE_LAST_LOGIN': False,

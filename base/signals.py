@@ -12,4 +12,6 @@ def create_profile(sender, instance, created, **kwargs):
 
 @receiver(pre_delete, sender=User)
 def remove_profile(sender, instance, **kwags):
-    Profile.objects.filter(user=instance).delete()
+    users_profile = Profile.objects.filter(user=instance)
+    if users_profile:
+        users_profile.delete()

@@ -1,20 +1,33 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from .serializers import ChangePasswordSerializer, UserSerializer
 from rest_framework.response import Response
 from rest_framework import status
+from django.contrib.auth.models import User
+from .models import Profile
+from .serializers import ChangePasswordSerializer, ProfileSerializer, UserSerializer
 
 
-@api_view(http_method_names=["PUT"])
+@api_view(http_method_names=["GET", "PUT"])
 @permission_classes([IsAuthenticated])
-def update_profile(request):
-    return Response({})
+def get_users_profile(request):
+    if request.method == "GET":
+        profile = Profile.objects.get(user=request.user)
+        profile_serializer = ProfileSerializer(profile, many=False)
+        return Response(profile_serializer.data, status=status.HTTP_200_OK)
+    if request.method == "PUT":
+        pass
 
 
 @api_view(http_method_names=["DELETE"])
 @permission_classes([IsAuthenticated])
-def delete_profile(request):
-    return Response({})
+def delete_user(request):
+    current_user = UserSerializer(request.user)
+    user = User.objects.get(pk=current_user.data['id'])
+    if user:
+        user.delete()
+        return Response({"success": f"User {user.pk} has been deleted successfullt"},
+                        status=status.HTTP_204_NO_CONTENT)
+    return Response({'message': "Can't get the user"}, status=status.HTTP_417_EXPECTATION_FAILED)
 
 
 @api_view(http_method_names=['POST'])
