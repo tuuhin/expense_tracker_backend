@@ -6,6 +6,7 @@ class BaseConfig(AppConfig):
     name = 'base'
 
     def ready(self):
+        # using receivers
         import base.signals
 
         return super().ready()

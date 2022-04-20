@@ -4,12 +4,14 @@ from django.contrib.auth.models import User
 from .models import Profile
 
 
+# create a profile for that particular user
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
 
 
+# delete the profile if the user is promt to delete itself
 @receiver(pre_delete, sender=User)
 def remove_profile(sender, instance, **kwags):
     users_profile = Profile.objects.filter(user=instance)
