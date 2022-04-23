@@ -8,6 +8,8 @@ urlpatterns = [
     # authentication routes
     path('auth/', include('base.urls')),
     # api routes
-    path('api/', include('api.urls'))
+    path('api/', include('api.urls')),
+    # plans route
+    path('plans/', include('plans.urls'))
 
 ]
