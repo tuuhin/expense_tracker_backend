@@ -28,4 +28,4 @@ def resize_photo(photo):
     # Read output and create ContentFile in memory
     content_file = ContentFile(output.read())
     file = File(content_file)
-    photo.save(f"{photo}.jpeg", file, save=False)
+    photo.save(f"{photo}", file, save=False)

@@ -8,7 +8,8 @@ class GoalSerializers(serializers.ModelSerializer):
         model = Goal
         fields = '__all__'
         extra_kwargs = {
-            'user': {'write_only': True}
+            'user': {'write_only': True},
+            'collected': {'required': True}
         }
 
 
