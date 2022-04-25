@@ -14,8 +14,11 @@ class Goal(models.Model):
     actual_price = models.FloatField(null=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     is_accomplished = models.BooleanField(
-        default=collected == actual_price, editable=False)
+        default=collected == actual_price or collected > actual_price, editable=False)
     image = models.ImageField(upload_to="goals", null=True)
+
+    class Meta:
+        ordering = ('-updated_at',)
 
     @property
     def is_accomplished(self):
@@ -39,16 +42,37 @@ class Goal(models.Model):
 
 
 class Budget(models.Model):
+
     amount = models.PositiveIntegerField(null=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    duration = models.DurationField(null=False)
+    created_at = models.DateField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-created_at',)
 
     def __str__(self):
-        return f""
+        return f"Budget {self.id}"
 
 
 class Saving(models.Model):
     title = models.CharField(max_length=50, null=False, blank=False)
+    desc = models.TextField(null=True)
+    goals = models.ManyToManyField(Goal, null=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.title}"
+
+
+class Notifications(models.Model):
+
+    title = models.CharField(max_length=50, blank=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-at',)
+
+    def __str__(self):
+        return f"Notification {self.title}"
