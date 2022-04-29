@@ -8,8 +8,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'username', 'password',
-                  'email', 'first_name', 'last_name')
+        fields = ('id', 'username', 'password', 'email',)
         extra_kwargs = {
             'email': {'required': True},
             'password': {'write_only': True}
@@ -17,10 +16,10 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_tokens(self, pk):
         current_user = User.objects.get(pk=pk)
-        tokens = self.get_tokens_for_user(current_user)
+        tokens = self._get_tokens_for_user(current_user)
         return tokens
 
-    def get_tokens_for_user(user):
+    def _get_tokens_for_user(self, user):
         # get tokens from user data
         refresh = RefreshToken.for_user(user)
         return {

@@ -20,7 +20,7 @@ def get_users_profile(request):
 
     if request.method == "PUT":
         data = request.data.copy()
-        data['user'] = request.user.id
+        data['user'] = request.user.pk
         profile = Profile.objects.get(user=request.user)
         profile_serializer = ProfileSerializer(profile, data=data)
 
@@ -38,14 +38,14 @@ def delete_user(request):
 
     current_user = UserSerializer(request.user)
     id = current_user.data.get('id')
-    user = User.objects.get(pk=id)
+    user = User.objects.filter(pk=id).first()
 
     if user:
         user.delete()
-        return Response({"message": f"User {user.pk} has been deleted successfully 😢😢"},
+        return Response({"message": f"User  has been deleted successfully 😢"},
                         status=status.HTTP_204_NO_CONTENT)
 
-    return Response({'message': "No user found with this credentials 😕😕"},
+    return Response({'message': "No user found with this credentials 😕"},
                     status=status.HTTP_417_EXPECTATION_FAILED)
 
 
@@ -74,14 +74,14 @@ def change_password(request):
         old_password = serializer.data.get("old_password")
         if not user.check_password(old_password):
             return Response({
-                "message": "Please give a valid password for this account 🤕🤕"
+                "message": "Please give a valid password for this account 🤕"
             }, status=status.HTTP_400_BAD_REQUEST)
 
         new_password = serializer.data.get('new_password')
         if new_password:
             user.set_password(str(new_password))
             user.save()
-            return Response({'message': 'your password has been changed 😁😁'},
+            return Response({'message': 'your password has been changed 🙆'},
                             status=status.HTTP_200_OK)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
