@@ -13,3 +13,5 @@ urlpatterns = [
     path('plans/', include('plans.urls'))
 
 ]
+
+admin.site.site_header = "Expense Tracker Backend"
