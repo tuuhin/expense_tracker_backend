@@ -13,6 +13,7 @@ class ExpenseAdmin(admin.ModelAdmin):
     list_display = ("title", "user", "amount", "added_at")
     ordering = ("-added_at",)
     list_filter = ('user',)
+    search_fields = ('user__username',)
 
 
 @admin.register(Income)
@@ -20,6 +21,7 @@ class IncomeAdmin(admin.ModelAdmin):
     list_display = ('title', 'user', 'amount', 'added_at')
     ordering = ('-added_at',)
     list_filter = ('user',)
+    search_fields = ('user__username',)
 
 
 @admin.register(Source)

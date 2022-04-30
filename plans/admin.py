@@ -12,8 +12,10 @@ class GoalsAdmin(admin.ModelAdmin):
 
 @admin.register(Notifications)
 class NotificationManager(admin.ModelAdmin):
-    list_display = ('title', 'user', 'at')
-    list_filter = ('user',)
+    list_display = ('title', 'user', 'at', 'status')
+    search_fields = ('user__username',)
+    list_filter = ('user', 'status')
+    actions_on_top = False
 
 
 @admin.register(Budget)

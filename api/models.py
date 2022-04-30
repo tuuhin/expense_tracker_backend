@@ -1,6 +1,8 @@
+from turtle import ontimer
 from django.db import models
 from django.contrib.auth.models import User
 from expense_tracker.utils import resize_photo, delete_photoURL
+from plans.models import Budget
 
 
 class Source(models.Model):
@@ -44,6 +46,7 @@ class Expenses(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     added_at = models.DateTimeField(auto_now_add=True)
     categories = models.ManyToManyField(Category, blank=False)
+    budget = models.ForeignKey(Budget, null=True, on_delete=models.SET_NULL)
     receipt = models.ImageField(
         upload_to="", null=True, blank=True)
 
@@ -51,9 +54,8 @@ class Expenses(models.Model):
         ordering = ('-added_at',)
 
     def save(self, *args, **kwargs):
-        expense = Expenses.objects.get(user=self.user)
 
-        if self.receipt and not expense.receipt == self.receipt:
+        if self.receipt:
 
             resize_photo(self.receipt)
 

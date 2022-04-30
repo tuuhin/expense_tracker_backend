@@ -19,7 +19,7 @@ def add_notification_for_income(sender, instance,  **kwags):
 
     if not income:
         Notifications.objects.create(
-            user=instance.user, title=f"Got {instance.amount} from {instance}", status="created")
+            user=instance.user, title=f"Got {instance.amount} for {instance}", status="created")
 
 
 @receiver([pre_delete], sender=Income)
@@ -37,10 +37,10 @@ def add_notification_for_source(sender, instance,  **kwags):
 
     if not source:
         Notifications.objects.create(
-            user=instance.user, title=f"Created Source {instance}", status="created")
+            user=instance.user, title=f"Created new source {instance}", status="created")
     else:
         Notifications.objects.create(
-            user=instance.user, title=f"Updated Source {instance}", status="updated")
+            user=instance.user, title=f"Updated source {instance}", status="updated")
 
 
 @receiver([pre_save], sender=Category)
