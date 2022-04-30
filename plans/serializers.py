@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Budget, Goal, Notifications, Saving
+from .models import Budget, Goal, Notifications
 
 
 class GoalSerializers(serializers.ModelSerializer):
@@ -10,17 +10,7 @@ class GoalSerializers(serializers.ModelSerializer):
         extra_kwargs = {
             'user': {'write_only': True},
             'collected': {'required': True},
-            'title': {'unique': True}
-        }
 
-
-class SavingSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Saving
-        fields = '__all__'
-        extra_kwags = {
-            'user': {'write_only': True}
         }
 
 
@@ -35,10 +25,9 @@ class NotificationSerializer(serializers.ModelSerializer):
 
 
 class BudgetSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Budget
         fields = '__all__'
-        extra_kwargs = {
+        extra_kwags = {
             'user': {'write_only': True}
         }

@@ -11,18 +11,14 @@ class Goal(models.Model):
     collected = models.FloatField(default=0.0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=datetime.now)
-    actual_price = models.FloatField(null=False)
+    price = models.FloatField(null=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     is_accomplished = models.BooleanField(
-        default=collected == actual_price or collected > actual_price, editable=False)
-    image = models.ImageField(upload_to="goals", null=True)
+        default=collected == price or collected > price, editable=False)
+    image = models.ImageField(upload_to="", null=True, blank=True)
 
     class Meta:
         ordering = ('-updated_at',)
-
-    @property
-    def is_accomplished(self):
-        return self.is_accomplished
 
     def save(self, *args, **kwags):
 
@@ -42,37 +38,42 @@ class Goal(models.Model):
 
 
 class Budget(models.Model):
-
-    amount = models.PositiveIntegerField(null=False)
+    title = models.CharField(max_length=50, null=False, blank=False)
+    desc = models.TextField(blank=True)
+    _from = models.DateField(verbose_name="from")
+    to = models.DateField()
+    total_amount = models.FloatField(null=False, blank=False)
+    amount_used = models.FloatField(null=False, blank=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    duration = models.DurationField(null=False)
-    created_at = models.DateField(auto_now_add=True)
+    issued_at = models.DateTimeField(auto_now_add=True)
+    has_expired = models.BooleanField(
+        default=total_amount == amount_used or amount_used > total_amount, editable=False)
 
     class Meta:
-        ordering = ('-created_at',)
-
-    def __str__(self):
-        return f"Budget {self.id}"
-
-
-class Saving(models.Model):
-    title = models.CharField(max_length=50, null=False, blank=False)
-    desc = models.TextField(null=True)
-    goals = models.ManyToManyField(Goal, null=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+        ordering = ('-issued_at',)
 
     def __str__(self):
         return f"{self.title}"
 
 
+actions = (
+    ("created", "created"),
+    ("updated", "updated"),
+    ("deleted", "deleted"),
+    ("blank", "blank")
+
+)
+
+
 class Notifications(models.Model):
 
     title = models.CharField(max_length=50, blank=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(to=User, on_delete=models.CASCADE)
+    status = models.CharField(max_length=10, choices=actions, default="blank")
     at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ('-at',)
 
     def __str__(self):
-        return f"Notification {self.title}"
+        return f"{self.title}"
