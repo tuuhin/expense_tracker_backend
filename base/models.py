@@ -4,10 +4,6 @@ from django.contrib.auth.models import User
 from expense_tracker.utils import resize_photo, delete_photoURL
 
 
-def profile_path_with_node():
-    pass
-
-
 class Profile(models.Model):
 
     phoneNumber = models.BigIntegerField(blank=True, null=True)

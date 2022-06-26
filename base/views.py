@@ -3,9 +3,28 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth.models import User
+from .utils import get_refresh_tokens
 
 from .models import Profile
 from .serializers import ChangePasswordSerializer, ProfileSerializer, UserSerializer
+
+
+@api_view(http_method_names=['POST'])
+def register_users(request):
+    user_serializer = UserSerializer(data=request.data)
+
+    if user_serializer.is_valid():
+        user_serializer.save()
+        user_id = user_serializer.data.copy()['id']
+        new_user = User.objects.get(pk=user_id)
+
+        profile = Profile.objects.filter(user=new_user).first()
+        profile_serializer = ProfileSerializer(profile, many=False)
+
+        tokens = get_refresh_tokens(new_user)
+        return Response({'profile': profile_serializer.data, 'tokens': tokens}, status=status.HTTP_201_CREATED)
+
+    return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(http_method_names=["GET", "PUT"])
@@ -47,20 +66,6 @@ def delete_user(request):
 
     return Response({'message': "No user found with this credentials 😕"},
                     status=status.HTTP_417_EXPECTATION_FAILED)
-
-
-@api_view(http_method_names=['POST'])
-def register_users(request):
-
-    user = UserSerializer(data=request.data)
-
-    if user.is_valid():
-        user.save()
-        id = user.data.get("id")
-        tokens = user.get_tokens(id)
-        return Response({'user': user.data, **tokens}, status=status.HTTP_201_CREATED)
-
-    return Response(user.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(http_method_names=['POST'])
