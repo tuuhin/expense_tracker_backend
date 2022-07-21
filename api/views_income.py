@@ -1,6 +1,8 @@
+from xmlrpc.client import ResponseError
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.request import Request
 from rest_framework import status
 from .serializers import IncomeSerializer, SourceSerializer
 from .models import Income,  Source
@@ -8,7 +10,7 @@ from .models import Income,  Source
 
 @api_view(http_method_names=['GET', 'POST'])
 @permission_classes([IsAuthenticated])
-def sources(request):
+def sources(request: Request) -> Response:
 
     if request.method == 'GET':
         sources = Source.objects.filter(user=request.user)
@@ -27,7 +29,7 @@ def sources(request):
 
 @api_view(http_method_names=['PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
-def update_sources(request, pk):
+def update_sources(request: Request, pk: int) -> Response:
     user = request.user.pk
 
     if request.method == 'PUT':
@@ -57,7 +59,7 @@ def update_sources(request, pk):
 
 @api_view(http_method_names=['GET', 'POST'])
 @permission_classes([IsAuthenticated])
-def income(request):
+def income(request: Request) -> Response:
 
     if request.method == 'GET':
         incomes = Income.objects.filter(user=request.user)
@@ -65,9 +67,23 @@ def income(request):
         return Response(serialized_incomes.data, status=status.HTTP_200_OK)
 
     if request.method == 'POST':
-        data = request.data
+        list_sources = []
+        data = request.data.copy()
         data['user'] = request.user.pk
+
+        sources = request.data.pop('source')
+        if sources:
+            for source in sources:
+                check_source = Source.objects.filter(pk=source['id']).first()
+                if check_source:
+                    s_serializer = SourceSerializer(check_source, many=False)
+                    list_sources.append(
+                        {'user': request.user.pk, **s_serializer.data})
+
+        data['source'] = list_sources
+
         serialized_income = IncomeSerializer(data=data)
+
         if serialized_income.is_valid():
             serialized_income.save()
             return Response(serialized_income.data, status=status.HTTP_201_CREATED)
@@ -76,7 +92,7 @@ def income(request):
 
 @api_view(http_method_names=['PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
-def income_details(request, pk):
+def income_details(request: Request, pk: int) -> Response:
     user = request.user.pk
 
     if request.method == "PUT":
