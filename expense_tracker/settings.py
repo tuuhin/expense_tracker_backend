@@ -56,7 +56,6 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'expense_tracker.urls'
 
 REST_FRAMEWORK = {
-    'DATETIME_FORMAT': "%c",
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ), 'DEFAULT_PERMISSION_CLASSES': [

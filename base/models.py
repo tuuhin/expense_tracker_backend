@@ -9,25 +9,25 @@ class Profile(models.Model):
     phoneNumber = models.BigIntegerField(blank=True, null=True)
     user = models.OneToOneField(User, on_delete=models.DO_NOTHING)
     firstName = models.CharField(max_length=50, blank=True,)
-    lastName = models.CharField(max_length=50, blank=True,)
+    lastName = models.CharField(max_length=50, blank=True)
     photoURL = models.ImageField(
-        upload_to="", null=True, blank=True)
+        upload_to="profile/", null=True, blank=True)
     createdAt = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=datetime.now)
 
     def save(self, *args, **kwargs):
 
         if self.photoURL:
-            resize_photo(self.photoURL)
+            resize_photo(self.photoURL, self.user)
 
         return super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
 
         if self.photoURL:
-            delete_photoURL(self.photoURL)
+            delete_photoURL(self.photoURL, self.user)
 
         return super().delete(*args, **kwargs)
 
-    def __str__(self):
+    def __repr__(self) -> str:
         return f'{self.user.username}'
