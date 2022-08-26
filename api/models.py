@@ -57,13 +57,13 @@ class Expenses(models.Model):
 
         if self.receipt:
 
-            resize_photo(self.receipt)
+            resize_photo(self.receipt, self.user)
 
         return super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
         if self.receipt:
-            delete_photoURL(self.receipt)
+            delete_photoURL(self.receipt, self.user)
         super().delete(*args, **kwargs)
 
     def __str__(self):

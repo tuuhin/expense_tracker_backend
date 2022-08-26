@@ -1,6 +1,8 @@
 from rest_framework import serializers
+from plans.models import Budget
 from .models import Expenses, Source, Category, Income
 from django.contrib.auth.models import User
+from plans.serializers import BudgetSerializer
 
 
 class SourceSerializer(serializers.ModelSerializer):
@@ -51,7 +53,22 @@ class IncomeSerializer(serializers.ModelSerializer):
 
 
 class ExpenseSerializer(serializers.ModelSerializer):
-    categories = CategorySerializer(many=True)
+
+    categories = CategorySerializer(many=True, required=False)
+    budget = BudgetSerializer(many=False, read_only=False)
+
+    def create(self, validated_data):
+        categories = validated_data.pop('categories')
+        budget = validated_data.pop('budget')
+        budget_object = Budget.objects.filter(**budget).first()
+
+        expense = Expenses.objects.create(
+            **validated_data, budget=budget_object)
+        for category in categories:
+            category_object = Category.objects.filter(**category).first()
+            if category_object:
+                expense.categories.add(category_object.pk)
+        return expense
 
     class Meta:
         model = Expenses
