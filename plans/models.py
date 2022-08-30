@@ -43,11 +43,12 @@ class Budget(models.Model):
     _from = models.DateField(verbose_name="from")
     to = models.DateField()
     total_amount = models.FloatField(null=False, blank=False)
-    amount_used = models.FloatField(null=False, blank=False)
+    amount_used = models.FloatField(default=0.0,null=False, blank=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     issued_at = models.DateTimeField(auto_now_add=True)
     has_expired = models.BooleanField(
         default=total_amount == amount_used or amount_used > total_amount, editable=False)
+    
 
     class Meta:
         ordering = ('-issued_at',)
@@ -77,3 +78,6 @@ class Notifications(models.Model):
 
     def __str__(self):
         return f"{self.title}"
+
+
+    

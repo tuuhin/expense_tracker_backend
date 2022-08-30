@@ -48,7 +48,7 @@ class Expenses(models.Model):
     categories = models.ManyToManyField(Category, blank=False)
     budget = models.ForeignKey(Budget, null=True, on_delete=models.SET_NULL)
     receipt = models.ImageField(
-        upload_to="", null=True, blank=True)
+        upload_to="expenses", null=True, blank=True)
 
     class Meta:
         ordering = ('-added_at',)
@@ -57,7 +57,7 @@ class Expenses(models.Model):
 
         if self.receipt:
 
-            resize_photo(self.receipt, self.user)
+            resize_photo(self.receipt, self.user,resize=False)
 
         return super().save(*args, **kwargs)
 

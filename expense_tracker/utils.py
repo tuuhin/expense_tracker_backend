@@ -19,9 +19,9 @@ def delete_photoURL(photoURL: ImageFieldFile, user: User):
         print("There was some error due to which the photoURL can't be deleted.")
 
 
-def resize_photo(photo: ImageFieldFile, user: User):
+def resize_photo(photo: ImageFieldFile, user: User,resize:bool = True):
     img = Image.open(photo).convert("RGB")
-    if img.size > (512, 512):
+    if img.size > (512, 512) and resize:
         img.thumbnail((512, 512))  # Resize to size
     output = BytesIO()
     # Save resize image to bytes
