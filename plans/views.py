@@ -1,4 +1,3 @@
-from django import http
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -73,19 +72,19 @@ def budget(request):
     if request.method == 'POST':
         data = request.data.copy()
         data['user'] = request.user.pk
+
         serialized_budget = BudgetSerializer(data=data)
 
         if serialized_budget.is_valid():
             serialized_budget.save()
             return Response(serialized_budget.data, status=status.HTTP_201_CREATED)
-
         return Response(serialized_budget.errors, status=status.HTTP_424_FAILED_DEPENDENCY)
 
 
-@api_view(http_method_names=['GET'])
-@permission_classes([IsAuthenticated])
-def show_notifications(request):
+# @api_view(http_method_names=['GET'])
+# @permission_classes([IsAuthenticated])
+# def show_notifications(request):
 
-    notifications = Notifications.objects.filter(user=request.user)
-    serializer = NotificationSerializer(notifications, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+#     notifications = Notifications.objects.filter(user=request.user)
+#     serializer = NotificationSerializer(notifications, many=True)
+#     return Response(serializer.data, status=status.HTTP_200_OK)
