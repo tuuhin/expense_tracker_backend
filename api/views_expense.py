@@ -23,36 +23,39 @@ def expenses(request: Request) -> Response:
     if request.method == 'POST':
         data = request.data.copy()
         data['user'] = request.user.pk
+        if request.data.get('categories'):
+            categories = request.data.pop('categories')
+            if categories:
+                list_categories = []
+                for category in categories:
+                    check_category = Category.objects.filter(
+                        pk=category['id']).first()
+                    if check_category:
 
-        categories = request.data.pop('categories')
-        budget = request.data.pop('budget')
-        if categories:
-            list_categories = []
-            for category in categories:
-                check_category = Category.objects.filter(
-                    pk=category['id']).first()
-                if check_category:
+                        s_category = CategorySerializer(
+                            check_category, many=False)
 
-                    s_category = CategorySerializer(check_category, many=False)
-
-                    list_categories.append(
-                        {'user': request.user.pk, **s_category.data})
+                        list_categories.append(
+                            {'user': request.user.pk, **s_category.data})
             data['categories'] = list_categories
+        if request.data.get('budget'):
+            budget = request.data.pop('budget')
 
-        if budget:
-            check_budget = Budget.objects.filter(pk=budget['id']).first()
-            if check_budget:
-                s_budget = BudgetSerializer(check_budget, many=False)
-                user_budget = {'user': request.user.pk, **s_budget.data}
-                data['budget'] = user_budget
+            if budget:
+                check_budget = Budget.objects.filter(pk=budget['id']).first()
+                if check_budget:
+                    s_budget = BudgetSerializer(check_budget, many=False)
+                    user_budget = {'user': request.user.pk, **s_budget.data}
+                    data['budget'] = user_budget
 
         serialized_expense = ExpenseSerializer(data=data)
 
         if serialized_expense.is_valid():
             serialized_expense.save()
             return Response(serialized_expense.data, status=status.HTTP_201_CREATED)
+        print(serialized_expense.errors)
 
-        return Response(serialized_expense.data, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serialized_expense.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(http_method_names=['GET', 'POST'])

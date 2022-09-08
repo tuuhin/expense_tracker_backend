@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.validators import ValidationError
 from plans.models import Budget
 from .models import Expenses, Source, Category, Income
 from django.contrib.auth.models import User
@@ -69,6 +70,14 @@ class ExpenseSerializer(serializers.ModelSerializer):
             if category_object:
                 expense.categories.add(category_object.pk)
         return expense
+
+    def validate(self, attrs):
+        amount: float = attrs['amount']
+        budget: Budget = Budget(**attrs['budget'])
+        if budget.amount_used + amount > budget.total_amount:
+            raise ValidationError(
+                detail="This expense can't fit to this budget ")
+        return super().validate(attrs)
 
     class Meta:
         model = Expenses

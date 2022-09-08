@@ -42,11 +42,12 @@ class Income(models.Model):
 class Expenses(models.Model):
     title = models.CharField(max_length=50)
     desc = models.CharField(max_length=250, blank=True)
-    amount = models.FloatField(default=0)
+    amount = models.FloatField(blank=False, null=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     added_at = models.DateTimeField(auto_now_add=True)
     categories = models.ManyToManyField(Category, blank=False)
-    budget = models.ForeignKey(Budget, null=True, on_delete=models.SET_NULL)
+    budget = models.ForeignKey(
+        Budget, null=True, on_delete=models.SET_NULL)
     receipt = models.ImageField(
         upload_to="expenses", null=True, blank=True)
 
@@ -57,7 +58,7 @@ class Expenses(models.Model):
 
         if self.receipt:
 
-            resize_photo(self.receipt, self.user,resize=False)
+            resize_photo(self.receipt, self.user, resize=False)
 
         return super().save(*args, **kwargs)
 
