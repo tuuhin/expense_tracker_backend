@@ -45,7 +45,7 @@ class Expenses(models.Model):
     amount = models.FloatField(blank=False, null=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     added_at = models.DateTimeField(auto_now_add=True)
-    categories = models.ManyToManyField(Category, blank=False)
+    categories = models.ManyToManyField(Category, blank=True)
     budget = models.ForeignKey(
         Budget, null=True, on_delete=models.SET_NULL)
     receipt = models.ImageField(

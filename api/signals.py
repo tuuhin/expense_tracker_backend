@@ -1,6 +1,4 @@
-from typing import List, Optional
 from django.dispatch import receiver
-from typing import Union
 from django.db.models.signals import pre_save, pre_delete, post_save
 from api.models import Category, Expenses, Income, Source
 from plans.models import Notifications, Budget

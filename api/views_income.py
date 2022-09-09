@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework import status
-from .serializers import IncomeSerializer, SourceSerializer
+from .serializers import CreateIncomeSerializers, IncomeSerializer, SourceSerializer
 from .models import Income,  Source
 
 
@@ -67,22 +67,11 @@ def income(request: Request) -> Response:
         return Response(serialized_incomes.data, status=status.HTTP_200_OK)
 
     if request.method == 'POST':
-        list_sources = []
+
         data = request.data.copy()
         data['user'] = request.user.pk
 
-        sources = request.data.pop('source')
-        if sources:
-            for source in sources:
-                check_source = Source.objects.filter(pk=source['id']).first()
-                if check_source:
-                    s_serializer = SourceSerializer(check_source, many=False)
-                    list_sources.append(
-                        {'user': request.user.pk, **s_serializer.data})
-
-        data['source'] = list_sources
-
-        serialized_income = IncomeSerializer(data=data)
+        serialized_income = CreateIncomeSerializers(data=data)
 
         if serialized_income.is_valid():
             serialized_income.save()

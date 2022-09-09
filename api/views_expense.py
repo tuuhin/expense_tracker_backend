@@ -1,5 +1,6 @@
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.request import Request
@@ -7,13 +8,12 @@ from rest_framework.request import Request
 from plans.models import Budget
 from plans.serializers import BudgetSerializer
 from .models import Expenses, Category
-from .serializers import ExpenseSerializer, CategorySerializer
+from .serializers import ExpenseSerializer, CategorySerializer, CreateExpenseSerializer
 
 
 @api_view(http_method_names=['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def expenses(request: Request) -> Response:
-
     if request.method == 'GET':
         expenses = Expenses.objects.filter(user=request.user)
         expense_serializer = ExpenseSerializer(
@@ -23,37 +23,36 @@ def expenses(request: Request) -> Response:
     if request.method == 'POST':
         data = request.data.copy()
         data['user'] = request.user.pk
-        if request.data.get('categories'):
-            categories = request.data.pop('categories')
-            if categories:
-                list_categories = []
-                for category in categories:
-                    check_category = Category.objects.filter(
-                        pk=category['id']).first()
-                    if check_category:
+        # if request.data.get('categories'):
+        #     categories = request.data.pop('categories')
+        #     if categories:
+        #         list_categories = []
+        #         for category in categories:
+        #             check_category = Category.objects.filter(
+        #                 pk=category['id']).first()
+        #             if check_category:
 
-                        s_category = CategorySerializer(
-                            check_category, many=False)
+        #                 s_category = CategorySerializer(
+        #                     check_category, many=False)
 
-                        list_categories.append(
-                            {'user': request.user.pk, **s_category.data})
-            data['categories'] = list_categories
-        if request.data.get('budget'):
-            budget = request.data.pop('budget')
+        #                 list_categories.append(
+        #                     {'user': request.user.pk, **s_category.data})
+        #     data['categories'] = list_categories
+        # if request.data.get('budget'):
+        #     budget = request.data.pop('budget')
 
-            if budget:
-                check_budget = Budget.objects.filter(pk=budget['id']).first()
-                if check_budget:
-                    s_budget = BudgetSerializer(check_budget, many=False)
-                    user_budget = {'user': request.user.pk, **s_budget.data}
-                    data['budget'] = user_budget
+        #     if budget:
+        #         check_budget = Budget.objects.filter(pk=budget['id']).first()
+        #         if check_budget:
+        #             s_budget = BudgetSerializer(check_budget, many=False)
+        #             user_budget = {'user': request.user.pk, **s_budget.data}
+        #             data['budget'] = user_budget
 
-        serialized_expense = ExpenseSerializer(data=data)
+        serialized_expense = CreateExpenseSerializer(data=data)
 
         if serialized_expense.is_valid():
             serialized_expense.save()
             return Response(serialized_expense.data, status=status.HTTP_201_CREATED)
-        print(serialized_expense.errors)
 
         return Response(serialized_expense.errors, status=status.HTTP_400_BAD_REQUEST)
 
