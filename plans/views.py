@@ -1,15 +1,17 @@
 from rest_framework.response import Response
+from rest_framework.exceptions import NotFound
+from rest_framework.request import Request
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 
-from .serializers import BudgetSerializer, GoalSerializers, NotificationSerializer
+from .serializers import BudgetSerializer, GoalSerializers
 from .models import Budget, Goal, Notifications
 
 
 @api_view(http_method_names=['GET', 'POST'])
 @permission_classes([IsAuthenticated])
-def goals(request):
+def goals(request: Request) -> Response:
 
     if request.method == 'GET':
         goals = Goal.objects.filter(user=request.user)
@@ -27,7 +29,7 @@ def goals(request):
 
 @api_view(http_method_names=['PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
-def upgrade_goals(request, pk):
+def upgrade_goals(request: Request, pk: int) -> Response:
 
     if request.method == 'PUT':
         current_goal = Goal.objects.filter(pk=pk, user=request.user).first()
@@ -43,12 +45,12 @@ def upgrade_goals(request, pk):
         if current_goal:
             current_goal.delete()
             return Response({'message': 'successfully removed'}, status=status.HTTP_204_NO_CONTENT)
-        return Response({'message': 'failed to get the goals'}, status=status.HTTP_424_FAILED_DEPENDENCY)
+        raise NotFound(detail="Goal don't extsts")
 
 
 @api_view(http_method_names=['DELETE'])
 @permission_classes([IsAuthenticated])
-def remove_budget(request, pk):
+def remove_budget(request: Request, pk: int) -> Response:
 
     if request.method == 'DELETE':
         budget_exists = Budget.objects.filter(pk=pk).first()
@@ -57,12 +59,12 @@ def remove_budget(request, pk):
             budget_exists.delete()
             return Response({'message': 'Budget has been deleted successfully'}, status=status.HTTP_302_FOUND)
 
-        return Response({'messsage': 'failed to get the user'}, status=status.HTTP_404_NOT_FOUND)
+        raise NotFound(detail="Budget don't exists")
 
 
 @api_view(http_method_names=['GET', 'POST'])
 @permission_classes([IsAuthenticated])
-def budget(request):
+def budget(request: Request) -> Response:
 
     if request.method == 'GET':
         budgets = Budget.objects.filter(user=request.user)

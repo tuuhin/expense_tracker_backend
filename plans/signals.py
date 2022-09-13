@@ -1,8 +1,15 @@
 from django.dispatch import receiver
 from django.db.models.signals import pre_save, pre_delete
-
+from django.db.models.base import ModelBase
+from django.utils import timezone
 from .models import Budget, Goal, Notifications
 from api.models import Category
+
+
+@receiver([pre_save], sender=Budget)
+def check_expiry(sender: ModelBase, instance: Budget, **kwags):
+    if not instance.has_expired and instance.amount_used > instance.total_amount or timezone.now() > instance.to:
+        instance.has_expired = True
 
 
 @receiver([pre_save], sender=Goal)

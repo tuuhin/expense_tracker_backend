@@ -18,5 +18,5 @@ class NotificationView(ListAPIView):
     serializer_class = NotificationSerializer
 
     def get(self, request, *args, **kwargs):
-        self.queryset = Notifications.objects.filter(user=request.user.pk)
+        self.queryset = self.queryset.filter(user=request.user.pk)
         return super().get(request, *args, **kwargs)
