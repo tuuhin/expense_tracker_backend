@@ -1,4 +1,5 @@
 from dataclasses import field
+from django.utils import timezone
 from rest_framework import serializers
 from rest_framework.validators import ValidationError
 from plans.models import Budget
@@ -111,7 +112,11 @@ class CreateExpenseSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         amount: float = attrs['amount']
         budget: Budget = attrs['budget']
-        if budget.amount_used + amount > budget.total_amount:
+        if budget.to < timezone.now():
             raise ValidationError(
-                detail="This expense can't fit to this budget ")
+                detail=f"The budget time-limit is over "
+            )
+        if budget.total_amount - budget.amount_used > amount:
+            raise ValidationError(
+                detail=f"This amount: {amount} is too large to  fit in  budget : {budget} ")
         return super().validate(attrs)

@@ -13,6 +13,7 @@ from .serializers import ExpenseSerializer, CategorySerializer, CreateExpenseSer
 
 @api_view(http_method_names=['GET', 'POST'])
 @permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser,FormParser])
 def expenses(request: Request) -> Response:
     if request.method == 'GET':
         expenses = Expenses.objects.filter(user=request.user)
@@ -52,7 +53,12 @@ def expenses(request: Request) -> Response:
 
         if serialized_expense.is_valid():
             serialized_expense.save()
-            return Response(serialized_expense.data, status=status.HTTP_201_CREATED)
+
+            new_expense = Expenses.objects.get(pk=serialized_expense.data["id"])
+            new_expense_serializer = ExpenseSerializer(new_expense)
+            
+            return Response(new_expense_serializer.data, status=status.HTTP_201_CREATED)
+        print(serialized_expense.errors)
 
         return Response(serialized_expense.errors, status=status.HTTP_400_BAD_REQUEST)
 
