@@ -1,8 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+
 from expense_tracker.utils import delete_photoURL, resize_photo
 from expense_tracker.validators import number_lt_zero
+
+from .choices import NotificationActions, ReminderChoices
 
 
 class Goal(models.Model):
@@ -16,7 +19,7 @@ class Goal(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     is_accomplished = models.BooleanField(
         default=False, editable=False)
-    image = models.ImageField(upload_to="", null=True, blank=True)
+    image = models.ImageField(upload_to="goals", null=True, blank=True)
 
     class Meta:
         ordering = ('-updated_at',)
@@ -24,14 +27,14 @@ class Goal(models.Model):
     def save(self, *args, **kwags):
 
         if self.image:
-            resize_photo(self.image)
+            resize_photo(self.image, self.user, resize=False)
 
         return super().save(*args, **kwags)
 
     def delete(self, *args, **kwargs):
 
         if self.image:
-            delete_photoURL(self.image)
+            delete_photoURL(self.image, self.user)
         return super().delete(*args, **kwargs)
 
     def __str__(self):
@@ -59,13 +62,6 @@ class Budget(models.Model):
         return f"{self.title}"
 
 
-class NotificationActions(models.TextChoices):
-    CREATED = 'created'
-    UPDATED = 'updated'
-    DELETED = 'deleted'
-    BLANK = 'blank'
-
-
 class Notifications(models.Model):
 
     title = models.CharField(max_length=50, blank=False)
@@ -79,3 +75,15 @@ class Notifications(models.Model):
 
     def __str__(self):
         return f"{self.title}"
+
+
+class Reminder(models.Model):
+    title = models.CharField(max_length=120, null=False, blank=False)
+    desc = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(
+        max_length=15, choices=ReminderChoices.choices, default=ReminderChoices.INFO)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ('-created_at',)
