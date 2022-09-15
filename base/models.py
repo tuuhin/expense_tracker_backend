@@ -1,4 +1,4 @@
-from datetime import datetime
+from django.utils import timezone
 from django.db import models
 from django.contrib.auth.models import User
 from expense_tracker.utils import resize_photo, delete_photoURL
@@ -14,7 +14,7 @@ class Profile(models.Model):
     photoURL = models.ImageField(
         upload_to="profile/", null=True, blank=True)
     createdAt = models.DateTimeField(auto_now_add=True)
-    updatedAt = models.DateTimeField(auto_now=datetime.now)
+    updatedAt = models.DateTimeField(auto_now=timezone.now)
 
     def save(self, *args, **kwargs):
 

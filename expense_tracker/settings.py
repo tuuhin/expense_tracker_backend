@@ -56,6 +56,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'expense_tracker.urls'
 
 REST_FRAMEWORK = {
+    "DATE_INPUT_FORMATS": ["iso-8601","%Y-%m-%dT%H:%M:%S.%f","%Y-%m-%dT%H:%M:%S.%f%z"],
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ), 'DEFAULT_PERMISSION_CLASSES': [
@@ -112,6 +113,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'expense_tracker.wsgi.application'
+
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
