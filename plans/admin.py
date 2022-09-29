@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Budget, Goal,  Notifications
+from .models import Budget, Goal,  Notifications, Reminder
 # Register your models here.
 
 
@@ -24,3 +24,10 @@ class BudgetAdmin(admin.ModelAdmin):
                     'total_amount', 'amount_used', 'has_expired')
     ordering = ('-issued_at',)
     list_filter = ('user',)
+
+
+@admin.register(Reminder)
+class Reminder(admin.ModelAdmin):
+    list_display = ('title', 'user', 'created_at')
+    ordering = ('-created_at', 'user')
+    list_filter = ('user', 'status')

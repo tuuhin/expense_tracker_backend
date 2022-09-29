@@ -6,7 +6,7 @@ from .models import Expenses, Income
 
 
 class EntriesPagination(MultipleModelLimitOffsetPagination):
-    default_limit = 5
+    default_limit = 6
 
 
 class Entries(FlatMultipleModelAPIView):
@@ -26,6 +26,7 @@ class Entries(FlatMultipleModelAPIView):
                 'queryset': Expenses.objects.filter(user=self.request.user.pk),
                 'serializer_class': ExpenseSerializer,
                 'label': 'expense'
-            }, ]
+            }, 
+        ]
 
         return querylist

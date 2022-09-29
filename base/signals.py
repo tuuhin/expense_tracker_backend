@@ -9,11 +9,9 @@ from plans.models import Notifications
 def create_profile(sender, instance, created, **kwargs):
     '''
     Create a profile for the  user and 
-    A notifiaction that a new user has been created
     '''
     if created:
         Profile.objects.create(user=instance)
-        Notifications.objects.create(user=instance, title="New user created ")
 
 
 @receiver(pre_delete, sender=User)

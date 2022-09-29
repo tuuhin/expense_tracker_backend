@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import Income,  Source, Category, Expenses
+from .forms import ExpenseForm
 
 
 @admin.register(Category)
@@ -10,6 +11,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Expenses)
 class ExpenseAdmin(admin.ModelAdmin):
+    form = ExpenseForm
     list_display = ("title", "user", "amount", "added_at")
     ordering = ("-added_at",)
     list_filter = ('user',)

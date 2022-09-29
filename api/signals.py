@@ -1,16 +1,29 @@
 from django.dispatch import receiver
-from django.db.models.signals import pre_save, pre_delete
+from django.db.models.signals import pre_save, pre_delete, post_save
 from api.models import Category, Expenses, Income, Source
-from plans.models import Notifications
+from plans.models import Notifications, Budget
+from django.db.models.base import ModelBase
 
 
 @receiver([pre_save], sender=Expenses)
-def add_notification_for_expense(sender, instance,  **kwags):
-    expense = Expenses.objects.filter(pk=instance.pk)
+def add_notification_for_expense(sender, instance: Expenses,  **kwags):
 
-    if not expense:
-        Notifications.objects.create(
-            user=instance.user, title=f"spent {instance.amount} on {instance}", status="created")
+    Notifications.objects.create(
+        user=instance.user, title=f"spent {instance.amount} on {instance}", status="created")
+
+
+@receiver([post_save], sender=Expenses)
+def update_budget_amount_on_add(sender: ModelBase, instance: Expenses, created: bool, **kwags):
+    budget: Budget = instance.budget
+    budget.amount_used += instance.amount
+    budget.save()
+
+
+@receiver([pre_delete], sender=Expenses)
+def update_budget_amount_on_delete(sender: ModelBase, instance: Expenses, **kwags):
+    budget: Budget = instance.budget
+    budget.amount_used -= instance.amount
+    budget.save()
 
 
 @receiver([pre_save], sender=Income)
