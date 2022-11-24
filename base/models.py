@@ -8,8 +8,8 @@ class Profile(models.Model):
 
     phoneNumber = models.BigIntegerField(blank=True, null=True)
     user = models.OneToOneField(User, on_delete=models.DO_NOTHING)
-    firstName = models.CharField(max_length=50, blank=True, null=True)
-    lastName = models.CharField(max_length=50, blank=True, null=True)
+    firstName = models.CharField(max_length=50, blank=True)
+    lastName = models.CharField(max_length=50, blank=True,null=True)
     email = models.EmailField(max_length=250, null=True, blank=True)
     photoURL = models.ImageField(
         upload_to="profile/", null=True, blank=True)
