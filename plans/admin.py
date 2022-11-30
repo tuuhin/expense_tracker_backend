@@ -6,8 +6,8 @@ from .models import Budget, Goal,  Notifications, Reminder
 @admin.register(Goal)
 class GoalsAdmin(admin.ModelAdmin):
     list_display = ('title', 'user', 'price', 'collected', 'is_accomplished')
-    ordering = ('-updated_at',)
-    list_filter = ('user', 'is_accomplished')
+    ordering = '-updated_at',
+    list_filter = 'user',
 
 
 @admin.register(Notifications)
@@ -22,12 +22,5 @@ class NotificationManager(admin.ModelAdmin):
 class BudgetAdmin(admin.ModelAdmin):
     list_display = ('title', 'user', '_from', 'to',
                     'total_amount', 'amount_used', 'has_expired')
-    ordering = ('-issued_at',)
-    list_filter = ('user',)
-
-
-@admin.register(Reminder)
-class Reminder(admin.ModelAdmin):
-    list_display = ('title', 'user', 'created_at')
-    ordering = ('-created_at', 'user')
-    list_filter = ('user', 'status')
+    ordering = '-issued_at',
+    list_filter = 'user',

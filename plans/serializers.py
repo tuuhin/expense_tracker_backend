@@ -4,13 +4,14 @@ from .models import Budget, Goal, Notifications, Reminder
 
 class GoalSerializers(serializers.ModelSerializer):
 
+    is_acccomplished = serializers.ReadOnlyField()
+
     class Meta:
         model = Goal
         fields = '__all__'
         extra_kwargs = {
             'user': {'write_only': True},
             'collected': {'required': True},
-
         }
 
 
@@ -25,6 +26,8 @@ class NotificationSerializer(serializers.ModelSerializer):
 
 
 class BudgetSerializer(serializers.ModelSerializer):
+    has_expired = serializers.ReadOnlyField()
+    amount_left = serializers.ReadOnlyField()
 
     class Meta:
         model = Budget

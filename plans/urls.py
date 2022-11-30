@@ -7,7 +7,7 @@ urlpatterns = [
 
     path('goals', goals, name="goals"),
     path('goals/<int:pk>', upgrade_goals, name="upgrade_goals"),
-    path("notifications", NotificationView.as_view(), name="notifications"),
+    path("notification", NotificationView.as_view(), name="notifications"),
     path('budget', budget, name="budget"),
     path("budget/<int:pk>", remove_budget, name="remove_budget"),
     path('reminders', reminders, name='reminders'),

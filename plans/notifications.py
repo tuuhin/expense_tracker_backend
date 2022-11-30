@@ -6,9 +6,9 @@ from .models import Notifications
 
 
 class NotificationPagination(LimitOffsetPagination):
-    default_limit: int = 5
-    max_limit: int = 10
-    offset_query_param: str = "from"
+    default_limit: int = 10
+    max_limit: int = 20
+    offset_query_param: str = "offset"
 
 
 class NotificationView(ListAPIView):
