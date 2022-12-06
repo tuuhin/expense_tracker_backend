@@ -1,13 +1,12 @@
-from typing import Optional
+from rest_framework import status
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
-from rest_framework.request import Request
-from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
 
-from .serializers import BudgetSerializer, GoalSerializers, ReminderSerializer
 from .models import Budget, Goal, Reminder
+from .serializers import BudgetSerializer, GoalSerializers
 
 
 @api_view(http_method_names=['GET', 'POST'])
@@ -49,18 +48,42 @@ def upgrade_goals(request: Request, pk: int) -> Response:
         raise NotFound(detail="Goal don't extsts")
 
 
-@api_view(http_method_names=['DELETE'])
+@api_view(http_method_names=['PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def remove_budget(request: Request, pk: int) -> Response:
+
+    if request.method == 'PUT':
+        current_budget = Budget.objects.filter(
+            pk=pk, user=request.user).first()
+        if current_budget.has_expired:
+            return Response({'detail': 'An expired budget cannot be deleted '}, status=status.HTTP_417_EXPECTATION_FAILED)
+
+        data = request.data.copy()
+        data['user'] = request.user.pk
+        budget_serializer = BudgetSerializer(current_budget, data=data)
+        if budget_serializer.is_valid():
+            return Response(budget_serializer.data, status=status.HTTP_202_ACCEPTED)
+        return Response(budget_serializer.errors, status=status.HTTP_417_EXPECTATION_FAILED)
+
+    # direct removal of budget are allowed if the expenses relation.length is zero
 
     if request.method == 'DELETE':
         budget_exists = Budget.objects.filter(pk=pk).first()
 
         if budget_exists:
-            budget_exists.delete()
-            return Response({'message': 'Budget has been deleted successfully'}, status=status.HTTP_302_FOUND)
+            if budget_exists.expenses_set.count() == 0:
+                budget_exists.delete()
+                return Response({'detail': 'Budget has been deleted successfully'}, status=status.HTTP_202_ACCEPTED)
 
-        raise NotFound(detail="Budget don't exists")
+            if budget_exists.has_expired:
+                budget_exists.delete()
+                return Response({'detail': 'Budget has been deleted successfully'}, status=status.HTTP_202_ACCEPTED)
+
+            raise NotFound(
+                'An un-expired budget cannot be removed remove all the expenses assocaited with it first', code=status.HTTP_406_NOT_ACCEPTABLE)
+
+        raise NotFound(detail="Budget don't exists ",
+                       code=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(http_method_names=['GET', 'POST'])
@@ -82,37 +105,6 @@ def budget(request: Request) -> Response:
             serialized_budget.save()
             return Response(serialized_budget.data, status=status.HTTP_201_CREATED)
         return Response(serialized_budget.errors, status=status.HTTP_424_FAILED_DEPENDENCY)
-
-
-@api_view(http_method_names=['GET', 'POST'])
-@permission_classes([IsAuthenticated])
-def reminders(request: Request) -> Response:
-
-    if request.method == 'GET':
-        reminders = Reminder.objects.filter(user=request.user)
-        reminder_serializer = ReminderSerializer(reminders, many=True)
-        return Response(reminder_serializer.data, status=status.HTTP_200_OK)
-    if request.method == 'POST':
-        data = request.data.copy()
-        data['user'] = request.user.pk
-
-        reminder_serializer = ReminderSerializer(data=data)
-        if reminder_serializer.is_valid():
-            reminder_serializer.save()
-            return Response(reminder_serializer.data, status=status.HTTP_201_CREATED)
-        return Response(reminder_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-@api_view(http_method_names=['DELETE'])
-@permission_classes([IsAuthenticated])
-def delete_reminders(request: Request, pk: int) -> Optional[Response]:
-
-    if request.method == 'DELETE':
-        # reminder = Reminder.objects.filter(pk=pk,user=request.user).first()
-        reminder = None
-        if reminder:
-            return Response({'detail': 'Removed reminder'}, status=status.HTTP_302_FOUND)
-        raise NotFound(detail="Invalid id")
 
 
 # @api_view(http_method_names=['GET'])

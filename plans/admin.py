@@ -22,5 +22,5 @@ class NotificationManager(admin.ModelAdmin):
 class BudgetAdmin(admin.ModelAdmin):
     list_display = ('title', 'user', '_from', 'to',
                     'total_amount', 'amount_used', 'has_expired')
-    ordering = '-issued_at',
+    ordering = '-updated',
     list_filter = 'user',

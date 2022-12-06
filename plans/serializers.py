@@ -4,7 +4,7 @@ from .models import Budget, Goal, Notifications, Reminder
 
 class GoalSerializers(serializers.ModelSerializer):
 
-    is_acccomplished = serializers.ReadOnlyField()
+    is_accomplished = serializers.ReadOnlyField()
 
     class Meta:
         model = Goal
@@ -28,6 +28,8 @@ class NotificationSerializer(serializers.ModelSerializer):
 class BudgetSerializer(serializers.ModelSerializer):
     has_expired = serializers.ReadOnlyField()
     amount_left = serializers.ReadOnlyField()
+    expense_count = serializers.ReadOnlyField(
+        source="expenses_set.count")
 
     class Meta:
         model = Budget
@@ -41,13 +43,3 @@ class BudgetSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Start date must be prior to end date.')
         return data
-
-
-class ReminderSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Reminder
-        fields = '__all__'
-        extra_kwargs = {
-            'user': {'write_only': True}
-        }
