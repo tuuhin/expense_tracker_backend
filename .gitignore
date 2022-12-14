@@ -5,5 +5,8 @@
 __pycache__
 db.sqlite3
 media
+benchmark/
 .env.local
 .vscode
+*.yml
+backup/

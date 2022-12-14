@@ -1,17 +1,18 @@
 from django.contrib.auth.models import User
+
+from rest_framework import status
+from rest_framework.request import Request
+from rest_framework.response import Response
 from rest_framework.decorators import (
     api_view, permission_classes, parser_classes)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.response import Response
-from rest_framework.request import Request
-from rest_framework import status
 from rest_framework_simplejwt.serializers import TokenObtainSerializer
 
 from .utils import get_refresh_tokens
 from .models import Profile
 from .serializers import (ChangePasswordSerializer,
-                          ProfileSerializer, UserSerializer)
+                          ProfileSerializer, UserSerializer,)
 
 
 @api_view(http_method_names=['POST'])
@@ -56,10 +57,9 @@ def login_user(request: Request) -> Response:
 @permission_classes([IsAuthenticated])
 def get_users_profile(request: Request) -> Response:
 
-    if request.method == "GET":
-        profile = Profile.objects.get(user=request.user)
-        profile_serializer = ProfileSerializer(profile, many=False)
-        return Response(profile_serializer.data, status=status.HTTP_200_OK)
+    profile = Profile.objects.get(user=request.user)
+    profile_serializer = ProfileSerializer(profile, many=False)
+    return Response(profile_serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(http_method_names=['PUT'])
@@ -122,3 +122,11 @@ def change_password(request: Request) -> Response:
                             status=status.HTTP_200_OK)
 
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(http_method_names=['GET'])
+@permission_classes([IsAuthenticated])
+def check_auth(request: Request) -> Response:
+    user = request.user
+    tokens = get_refresh_tokens(user)
+    return Response(tokens, status=status.HTTP_302_FOUND)

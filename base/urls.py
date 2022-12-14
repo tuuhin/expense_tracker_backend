@@ -1,8 +1,11 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import delete_user, get_users_profile, register_users, change_password, login_user, update_profile
+from .views import (delete_user, get_users_profile,
+                    register_users, change_password, login_user, update_profile, check_auth,)
 
 urlpatterns: list = [
+    # check auth state
+    path('check-auth', check_auth, name="check-auth-state"),
     # create a new user with credentials
     path('create', register_users, name="register_user"),
     # obtain a access and refresh token from username and password
