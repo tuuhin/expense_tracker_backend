@@ -1,42 +1,51 @@
+from typing import Optional
 from rest_framework import status
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound,  APIException
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, parser_classes
+from rest_framework.parsers import MultiPartParser, FormParser
+from django.http.request import QueryDict
 
-from .models import Budget, Goal, Reminder
+from .models import Budget, Goal
 from .serializers import BudgetSerializer, GoalSerializers
 
 
-@api_view(http_method_names=['GET', 'POST'])
+@api_view(http_method_names=['GET'])
 @permission_classes([IsAuthenticated])
-def goals(request: Request) -> Response:
+def goals(request: Request) -> Optional[Response]:
+    goals = Goal.objects.filter(user=request.user)
+    serialized_goals = GoalSerializers(goals, many=True)
+    return Response(serialized_goals.data, status=status.HTTP_200_OK)
 
-    if request.method == 'GET':
-        goals = Goal.objects.filter(user=request.user)
-        serialized_goals = GoalSerializers(goals, many=True)
-        return Response(serialized_goals.data, status=status.HTTP_200_OK)
 
-    if request.method == 'POST':
-        data = request.data.copy()
-        data['user'] = request.user.pk
-        serialized_goals = GoalSerializers(data=data)
-        if serialized_goals.is_valid():
-            return Response(serialized_goals.data, status=status.HTTP_201_CREATED)
-        return Response(serialized_goals.errors, status=status.HTTP_400_BAD_REQUEST)
+@api_view(http_method_names=['POST'])
+@parser_classes([MultiPartParser, FormParser])
+@permission_classes([IsAuthenticated])
+def create_goal(request: Request) -> Response:
+    data: QueryDict = request.data.copy()
+    data['user'] = request.user.pk
+
+    serialized_goals = GoalSerializers(data=data)
+    if serialized_goals.is_valid():
+        serialized_goals.save()
+        return Response(serialized_goals.data, status=status.HTTP_201_CREATED)
+    return Response(serialized_goals.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(http_method_names=['PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
 def upgrade_goals(request: Request, pk: int) -> Response:
 
     if request.method == 'PUT':
         current_goal = Goal.objects.filter(pk=pk, user=request.user).first()
         data = request.data.copy()
-        data['user'] = request.user.pk
+        data["user"]= request.user.pk
         goal_serializer = GoalSerializers(current_goal, data=data)
         if goal_serializer.is_valid():
+            goal_serializer.save()
             return Response(goal_serializer.data, status=status.HTTP_202_ACCEPTED)
         return Response(goal_serializer.errors, status=status.HTTP_417_EXPECTATION_FAILED)
 
@@ -44,50 +53,54 @@ def upgrade_goals(request: Request, pk: int) -> Response:
         current_goal = Goal.objects.filter(pk=pk, user=request.user).first()
         if current_goal:
             current_goal.delete()
-            return Response({'message': 'successfully removed'}, status=status.HTTP_204_NO_CONTENT)
+            return Response({'detail': 'successfully removed'}, status=status.HTTP_204_NO_CONTENT)
         raise NotFound(detail="Goal don't extsts")
 
 
 @api_view(http_method_names=['PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
-def remove_budget(request: Request, pk: int) -> Response:
+def change_budget(request: Request, pk: int) -> Response:
 
     if request.method == 'PUT':
-        current_budget = Budget.objects.filter(
+        current_budget: Budget = Budget.objects.filter(
             pk=pk, user=request.user).first()
-        if current_budget.has_expired:
-            return Response({'detail': 'An expired budget cannot be deleted '}, status=status.HTTP_417_EXPECTATION_FAILED)
 
-        data = request.data.copy()
-        data['user'] = request.user.pk
+        if current_budget.has_expired:
+            raise APIException('An expired budget cannot be deleted',
+                               code=status.HTTP_417_EXPECTATION_FAILED)
+
+        data: dict = {**request.data, 'user': request.user.pk}
+
+        if data.get('total_amount') <= sum([exp.amount for exp in current_budget.expenses_set.all()]):
+            raise APIException('This amount is already is used in some expense ',
+                               code=status.HTTP_424_FAILED_DEPENDENCY)
+
         budget_serializer = BudgetSerializer(current_budget, data=data)
         if budget_serializer.is_valid():
+            budget_serializer.save()
             return Response(budget_serializer.data, status=status.HTTP_202_ACCEPTED)
         return Response(budget_serializer.errors, status=status.HTTP_417_EXPECTATION_FAILED)
 
     # direct removal of budget are allowed if the expenses relation.length is zero
 
     if request.method == 'DELETE':
-        budget_exists = Budget.objects.filter(pk=pk).first()
+        budget_exists = Budget.objects.filter(pk=pk, user=request.user).first()
 
         if budget_exists:
-            if budget_exists.expenses_set.count() == 0:
+            if budget_exists.expenses_set.count() == 0 or budget_exists.has_expired:
+
                 budget_exists.delete()
                 return Response({'detail': 'Budget has been deleted successfully'}, status=status.HTTP_202_ACCEPTED)
 
-            if budget_exists.has_expired:
-                budget_exists.delete()
-                return Response({'detail': 'Budget has been deleted successfully'}, status=status.HTTP_202_ACCEPTED)
-
-            raise NotFound(
+            raise APIException(
                 'An un-expired budget cannot be removed remove all the expenses assocaited with it first', code=status.HTTP_406_NOT_ACCEPTABLE)
 
         raise NotFound(detail="Budget don't exists ",
                        code=status.HTTP_404_NOT_FOUND)
 
 
-@api_view(http_method_names=['GET', 'POST'])
-@permission_classes([IsAuthenticated])
+@ api_view(http_method_names=['GET', 'POST'])
+@ permission_classes([IsAuthenticated])
 def budget(request: Request) -> Response:
 
     if request.method == 'GET':

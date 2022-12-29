@@ -1,36 +1,26 @@
 from django.dispatch import receiver
-from django.db.models.signals import pre_save, pre_delete
+from django.db.models.signals import post_save, pre_delete, pre_save
 
-from .models import Budget, Goal, Notifications
+from .models import Budget, Goal, Notifications, NotificationSignalChoices
 from .choices import NotificationActions
 
-from api.models import Category
 
+@receiver([post_save], sender=Goal)
+def goals_notifications(sender: Goal, instance: Goal, created: bool, **kwags):
 
-@receiver([pre_save], sender=Goal)
-def create_category_if_not_exists(sender: Goal, instance: Goal, **kwargs):
-    goal_categories = Category.objects.filter(
-        user=instance.user, title="goals").first()
-    if not goal_categories:
-        Category.objects.create(user=instance.user, title="goals")
-
-
-@receiver([pre_save], sender=Goal)
-def goals_notifications(sender: Goal, instance: Goal, **kwags):
-
-    goal_exists = Goal.objects.filter(pk=instance.pk).exists()
-
-    if not goal_exists:
+    if created:
         Notifications.objects.create(
             user=instance.user,
-            title=f"Created Goal {instance}",
-            status=NotificationActions.CREATED
+            title=f"{instance}",
+            status=NotificationActions.CREATED,
+            signal=NotificationSignalChoices.GOAL,
         )
     else:
         Notifications.objects.create(
             user=instance.user,
-            title=f"Updated Goal {instance}",
+            title=f"{instance}",
             status=NotificationActions.UPDATED,
+            signal=NotificationSignalChoices.GOAL
         )
 
 
@@ -38,19 +28,28 @@ def goals_notifications(sender: Goal, instance: Goal, **kwags):
 def remove_goal(sender: Goal, instance: Goal, **kwags):
     Notifications.objects.create(
         user=instance.user,
-        title=f"Removed Goal {instance}",
-        status=NotificationActions.DELETED
+        title=f"{instance}",
+        status=NotificationActions.DELETED,
+        signal=NotificationSignalChoices.GOAL
     )
 
 
-@receiver([pre_save], sender=Budget)
-def add_budget(sender: Budget, instance: Budget, **kwags):
-    budget_exists = Budget.objects.filter(pk=instance.pk).exists()
-    if not budget_exists:
+@receiver([post_save], sender=Budget)
+def add_budget(sender: Budget, instance: Budget, created: bool, **kwags):
+
+    if created:
         Notifications.objects.create(
             user=instance.user,
-            title=f"Created a Budget {instance}",
-            status=NotificationActions.CREATED
+            title=f"{instance}",
+            status=NotificationActions.CREATED,
+            signal=NotificationSignalChoices.BUDGET
+        )
+    else:
+        Notifications.objects.create(
+            user=instance.user,
+            title=f"{instance}",
+            status=NotificationActions.UPDATED,
+            signal=NotificationSignalChoices.BUDGET
         )
 
 
@@ -59,6 +58,7 @@ def remove_budget(sender: Budget, instance: Budget, **kwags):
 
     Notifications.objects.create(
         user=instance.user,
-        title=f"Removed Budget {instance}",
-        status=NotificationActions.DELETED
+        title=f"{instance}",
+        status=NotificationActions.DELETED,
+        signal=NotificationSignalChoices.BUDGET
     )

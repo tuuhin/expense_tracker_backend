@@ -5,6 +5,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.decorators import (
     api_view, permission_classes, parser_classes)
+from rest_framework.exceptions import NotAcceptable, NotFound
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework_simplejwt.serializers import TokenObtainSerializer
@@ -12,7 +13,7 @@ from rest_framework_simplejwt.serializers import TokenObtainSerializer
 from .utils import get_refresh_tokens
 from .models import Profile
 from .serializers import (ChangePasswordSerializer,
-                          ProfileSerializer, UserSerializer,)
+                          ProfileSerializer, UserSerializer)
 
 
 @api_view(http_method_names=['POST'])
@@ -84,16 +85,14 @@ def update_profile(request: Request) -> Response:
 def delete_user(request: Request) -> Response:
 
     current_user = UserSerializer(request.user)
-    id = current_user.data.get('id')
-    user = User.objects.filter(pk=id).first()
+    user = User.objects.filter(**current_user.data).first()
 
     if user:
         user.delete()
-        return Response({"message": f"User  has been deleted successfully "},
+        return Response({"detail": f"User  has been deleted successfully "},
                         status=status.HTTP_204_NO_CONTENT)
 
-    return Response({'message': "No user found with this credentials"},
-                    status=status.HTTP_417_EXPECTATION_FAILED)
+    raise NotFound("No user found with this credentials")
 
 
 @api_view(http_method_names=['POST'])
@@ -103,25 +102,23 @@ def change_password(request: Request) -> Response:
     user = request.user
     serializer = ChangePasswordSerializer(data=request.data)
 
-    if serializer.is_valid():
-        old_password = serializer.data.get("old_password")
-        new_password = serializer.data.get('new_password')
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        if new_password == old_password:
-            return Response({'details': 'Both the passwords the completely same '}, status=status.HTTP_400_BAD_REQUEST)
+    old_password = serializer.data.get("old_password")
+    new_password = serializer.data.get('new_password')
 
-        if not user.check_password(old_password):
-            return Response({
-                "details": "The actual password dosen't match this one  🤕"
-            }, status=status.HTTP_400_BAD_REQUEST)
+    if new_password == old_password:
+        raise NotAcceptable("Both password found are same.")
 
-        if new_password:
-            user.set_password(str(new_password))
-            user.save()
-            return Response({'details': 'your password has been changed 🙆'},
-                            status=status.HTTP_200_OK)
+    if not user.check_password(old_password):
+        raise NotAcceptable("The actual password dosen't match this one")
 
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    if new_password:
+        user.set_password(str(new_password))
+        user.save()
+        return Response({'detail': 'your password has been changed'},
+                        status=status.HTTP_200_OK)
 
 
 @api_view(http_method_names=['GET'])

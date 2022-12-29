@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Budget, Goal, Notifications, Reminder
+from .models import Budget, Goal, Notifications
 
 
 class GoalSerializers(serializers.ModelSerializer):
@@ -20,16 +20,16 @@ class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notifications
         fields = '__all__'
-        extra_kwags = {
-            'user': {'write_only': True}
+        extra_kwargs = {
+            'user': {'write_only': True},
         }
 
 
 class BudgetSerializer(serializers.ModelSerializer):
     has_expired = serializers.ReadOnlyField()
     amount_left = serializers.ReadOnlyField()
-    expense_count = serializers.ReadOnlyField(
-        source="expenses_set.count")
+    amount_used = serializers.ReadOnlyField()
+    expense_count = serializers.ReadOnlyField(source="expenses_set.count")
 
     class Meta:
         model = Budget

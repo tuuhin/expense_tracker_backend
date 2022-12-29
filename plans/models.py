@@ -1,10 +1,12 @@
 from django.db import models
+from django.db.models import Sum
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.http import QueryDict
 
 from expense_tracker.utils import delete_photoURL, resize_photo
 from expense_tracker.validators import number_lt_zero
-from .choices import NotificationActions, ReminderChoices
+from .choices import NotificationActions, NotificationSignalChoices
 
 
 class Goal(models.Model):
@@ -43,17 +45,21 @@ class Goal(models.Model):
 
 
 class Budget(models.Model):
+
     title = models.CharField(max_length=50, null=False, blank=False)
     desc = models.TextField(blank=True, null=True)
     _from = models.DateTimeField(verbose_name="from", default=timezone.now)
     to = models.DateTimeField(verbose_name="to")
     total_amount = models.FloatField(
         null=False, blank=False, validators=[number_lt_zero])
-    amount_used = models.FloatField(
-        default=0.0, null=False, blank=False, validators=[number_lt_zero],editable=False)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     issued_at = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=timezone.now)
+
+    @property
+    def amount_used(self):
+        expenses: QueryDict = self.expenses_set.all()
+        return expenses.aggregate(Sum('amount')).get('amount__sum') or 0
 
     @property
     def has_expired(self):
@@ -76,6 +82,8 @@ class Notifications(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     status = models.CharField(
         max_length=10, choices=NotificationActions.choices, default=NotificationActions.BLANK)
+    signal = models.CharField(
+        max_length=20, choices=NotificationSignalChoices.choices, default=NotificationSignalChoices.UNKNOWN)
     at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -83,15 +91,3 @@ class Notifications(models.Model):
 
     def __str__(self):
         return f"{self.title}"
-
-
-class Reminder(models.Model):
-    title = models.CharField(max_length=120, null=False, blank=False)
-    desc = models.TextField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(
-        max_length=15, choices=ReminderChoices.choices, default=ReminderChoices.INFO)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-
-    class Meta:
-        ordering = ('-created_at',)
