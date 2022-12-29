@@ -1,16 +1,18 @@
-from django.conf import settings
-from PIL import Image
 from io import BytesIO
+
+from boto3 import client as AWSClient
+from PIL import Image
+
+from django.conf import settings
 from django.core.files import File
-from django.core.files.base import ContentFile
-import boto3
-from django.db.models.fields.files import ImageFieldFile
 from django.contrib.auth.models import User
+from django.core.files.base import ContentFile
+from django.db.models.fields.files import ImageFieldFile
 
 
 def delete_photoURL(photoURL: ImageFieldFile, user: User):
     try:
-        botoClient = boto3.client('s3')
+        botoClient = AWSClient('s3')
         botoClient.delete_object(
             Bucket=settings.AWS_STORAGE_BUCKET_NAME, Key=f"{user.username}/{photoURL.name}")
         print(f"{photoURL} has been deleted")
@@ -19,7 +21,7 @@ def delete_photoURL(photoURL: ImageFieldFile, user: User):
         print("There was some error due to which the photoURL can't be deleted.")
 
 
-def resize_photo(photo: ImageFieldFile, user: User,resize:bool = True):
+def resize_photo(photo: ImageFieldFile, user: User, resize: bool = True):
     img = Image.open(photo).convert("RGB")
     if img.size > (512, 512) and resize:
         img.thumbnail((512, 512))  # Resize to size
