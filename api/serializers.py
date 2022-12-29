@@ -1,4 +1,3 @@
-from dataclasses import field
 from rest_framework import serializers
 from rest_framework.validators import ValidationError
 from plans.models import Budget
@@ -27,34 +26,20 @@ class CategorySerializer(serializers.ModelSerializer):
         }
 
 
-class UpdateCategorySerializer(serializers.Serializer):
-    source = serializers.CharField(max_length=50)
-    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
-
-
 class IncomeSerializer(serializers.ModelSerializer):
 
     source = SourceSerializer(many=True, required=False)
-
-    # def create(self, validated_data):
-    #     sources = validated_data.pop('source')
-    #     income = Income.objects.create(**validated_data)
-    #     for source in sources:
-    #         source_object = Source.objects.filter(**source).first()
-    #         if source_object:
-    #             income.source.add(source_object.pk)
-    #     return income
 
     class Meta:
         model = Income
         fields = '__all__'
         extra_kwargs = {
             'user': {'write_only': True},
-            'amount': {'required': True}
+            'amount': {'required': False}
         }
 
 
-class CreateIncomeSerializers(serializers.ModelSerializer):
+class CreateIncomeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Income
@@ -86,7 +71,7 @@ class ExpenseSerializer(serializers.ModelSerializer):
     # def validate(self, attrs):
     #     amount: float = attrs['amount']
     #     budget: Budget = Budget(**attrs['budget'])
-    #     if budget.amount_used + amount > budget.total_amount:
+    #     if budget.amount_left < amount:
     #         raise ValidationError(
     #             detail="This expense can't fit to this budget ")
     #     return super().validate(attrs)
@@ -109,9 +94,48 @@ class CreateExpenseSerializer(serializers.ModelSerializer):
         }
 
     def validate(self, attrs):
+
         amount: float = attrs['amount']
         budget: Budget = attrs['budget']
-        if budget.total_amount - budget.amount_used > amount  :
+
+        if budget.amount_left < amount:
             raise ValidationError(
                 detail=f"This amount: {amount} is too large to  fit in  budget : {budget} ")
         return super().validate(attrs)
+
+
+class UpdateExpenseSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Expenses
+        fields = '__all__'
+        extra_kwargs = {
+            'user': {'write_only': True}
+        }
+
+    def update(self, instance: Expenses, validated_data):
+        old_amount: float = instance.amount
+        old_budget: Budget = instance.budget
+        amount: float = validated_data['amount']
+        budget: Budget = validated_data['budget']
+
+        if old_budget == budget:
+            if budget.amount_left + old_amount < amount:
+                print("here")
+                raise ValidationError(
+                    detail=f"This amount: {amount} is too large to  fit in  budget : {budget} ")
+        else:
+            if budget.amount_left < amount:
+                print("now here")
+                raise ValidationError(
+                    detail=f"This amount: {amount} is too large to  fit in  budget : {budget} ")
+
+        return super().update(instance, validated_data)
+
+
+class EntriesSerializer(serializers.Serializer):
+    highest_count = serializers.IntegerField()
+    overall_count = serializers.IntegerField()
+    previous = serializers.URLField(allow_blank=True)
+    next = serializers.URLField(allow_blank=True)
+    results = serializers.ListField(allow_empty=True)

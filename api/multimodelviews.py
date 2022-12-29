@@ -1,7 +1,8 @@
+from rest_framework.permissions import IsAuthenticated
 from drf_multiple_model.views import FlatMultipleModelAPIView
 from drf_multiple_model.pagination import MultipleModelLimitOffsetPagination
-from rest_framework.permissions import IsAuthenticated
-from .serializers import ExpenseSerializer, IncomeSerializer
+
+from .serializers import ExpenseSerializer, IncomeSerializer, EntriesSerializer
 from .models import Expenses, Income
 
 
@@ -11,9 +12,10 @@ class EntriesPagination(MultipleModelLimitOffsetPagination):
 
 class Entries(FlatMultipleModelAPIView):
 
-    sorting_field = '-added_at'
+    sorting_fields = '-added_at',
     pagination_class = EntriesPagination
     permission_classes = [IsAuthenticated]
+    serializer_class = EntriesSerializer
 
     def get_querylist(self):
         querylist = [
@@ -26,7 +28,6 @@ class Entries(FlatMultipleModelAPIView):
                 'queryset': Expenses.objects.filter(user=self.request.user.pk),
                 'serializer_class': ExpenseSerializer,
                 'label': 'expense'
-            }, 
+            },
         ]
-
         return querylist

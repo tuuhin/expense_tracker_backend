@@ -1,20 +1,24 @@
-from rest_framework.decorators import api_view, permission_classes, parser_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-from rest_framework.response import Response
+from typing import Optional
+
 from rest_framework import status
 from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.exceptions import NotFound
+from rest_framework.decorators import (
+    api_view, permission_classes, parser_classes)
 
-from plans.models import Budget
-from plans.serializers import BudgetSerializer
 from .models import Expenses, Category
-from .serializers import ExpenseSerializer, CategorySerializer, CreateExpenseSerializer
+from .serializers import (
+    ExpenseSerializer, CategorySerializer,
+    CreateExpenseSerializer, UpdateExpenseSerializer)
 
 
 @api_view(http_method_names=['GET', 'POST'])
 @permission_classes([IsAuthenticated])
-@parser_classes([MultiPartParser,FormParser])
-def expenses(request: Request) -> Response:
+@parser_classes([MultiPartParser, FormParser])
+def expenses(request: Request) -> Optional[Response]:
     if request.method == 'GET':
         expenses = Expenses.objects.filter(user=request.user)
         expense_serializer = ExpenseSerializer(
@@ -23,7 +27,7 @@ def expenses(request: Request) -> Response:
 
     if request.method == 'POST':
         data = request.data.copy()
-        data['user'] = request.user.pk
+        data["user"] = request.user.pk
         # if request.data.get('categories'):
         #     categories = request.data.pop('categories')
         #     if categories:
@@ -52,18 +56,52 @@ def expenses(request: Request) -> Response:
         serialized_expense = CreateExpenseSerializer(data=data)
 
         if serialized_expense.is_valid():
-            serialized_expense.save()
+            new_expense = serialized_expense.save()
 
-            new_expense = Expenses.objects.get(pk=serialized_expense.data["id"])
-            new_expense_serializer = ExpenseSerializer(new_expense)
-            
-            return Response(new_expense_serializer.data, status=status.HTTP_201_CREATED)
-        print(serialized_expense.errors)
+            response = ExpenseSerializer(new_expense)
+
+            return Response(response.data, status=status.HTTP_201_CREATED)
 
         return Response(serialized_expense.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(http_method_names=['PUT', 'DELETE'])
+@permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
+def upgrade_expense(request: Request, pk: int) -> Optional[Response]:
+    user = request.user.pk
+
+    if request.method == "PUT":
+        data = request.data.copy()
+        data['user'] = user
+        expense = Expenses.objects.filter(user=user, pk=pk).first()
+
+        if expense:
+            serialized_expense = UpdateExpenseSerializer(expense, data=data)
+
+            if serialized_expense.is_valid():
+                updated_expense = serialized_expense.save()
+
+                response = ExpenseSerializer(updated_expense, many=False)
+
+                return Response(response.data, status=status.HTTP_202_ACCEPTED)
+
+            return Response(serialized_expense.errors, status=status.HTTP_424_FAILED_DEPENDENCY)
+
+        raise NotFound(f"ExpenseId: {pk} do not exists")
+
+    if request.method == "DELETE":
+        expense: Optional[Expenses] = Expenses.objects.filter(
+            user=user, pk=pk).first()
+        if expense:
+            expense.delete()
+            return Response({'data': f'Expense titled {expense.title} do not exits'}, status=status.HTTP_204_NO_CONTENT)
+        raise NotFound('Could not remove this expense',
+                       code=status.HTTP_404_NOT_FOUND)
+
+
 @api_view(http_method_names=['GET', 'POST'])
+@permission_classes([IsAuthenticated])
 def categories(request: Request) -> Response:
 
     if request.method == 'GET':
@@ -85,12 +123,12 @@ def categories(request: Request) -> Response:
 
 @api_view(http_method_names=['PUT', 'DELETE'])
 @permission_classes([IsAuthenticated])
-def upgrade_categories(request: Request, pk: int) -> Response:
+def upgrade_categories(request: Request, pk: int) -> Optional[Response]:
     user = request.user.pk
 
     if request.method == 'PUT':
-        data = request.data
-        data['user'] = user
+        data = {**request.data, "user": request.user.pk}
+
         category = Category.objects.get(pk=pk)
 
         if category:
@@ -111,4 +149,4 @@ def upgrade_categories(request: Request, pk: int) -> Response:
             category_exists.delete()
             return Response({'message': 'the source has been deleted '}, status=status.HTTP_204_NO_CONTENT)
 
-        return Response({'message': 'source dont\'t exists'}, status=status.HTTP_404_NOT_FOUND)
+        raise NotFound('source dont\'t exists', code=status.HTTP_404_NOT_FOUND)

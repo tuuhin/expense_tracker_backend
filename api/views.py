@@ -1,27 +1,39 @@
-from rest_framework.decorators import permission_classes, api_view
-from rest_framework.response import Response
+from django.utils import timezone
+from django.db.models import Sum
+
 from rest_framework import status
 from rest_framework.request import Request
+from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import permission_classes, api_view
 
-from datetime import datetime
 from .models import Income, Expenses
 
 
 @api_view(http_method_names=['GET'])
 @permission_classes([IsAuthenticated])
-def base_information(request:Request) -> Response:
+def base_information(request: Request) -> Response:
     user = request.user
-    current_month = datetime.now().month
+    current_month = timezone.now().month
 
-    total_income = sum([income for income in Income.objects.filter(user=user)])
-    total_expense = sum([expense for expense in Expenses.objects.filter(user=user)])
-    monthly_income = sum([income for income in Income.objects.filter(user=user) if income.added_at.month==current_month])
-    monthly_expense = sum([expense for expense in Expenses.objects.filter(user=user) if expense.added_at.month==current_month])
+    total_income = Income.objects.filter(
+        user=user
+    ).aggregate(Sum('amount')).get('amount__sum') or 0
+    total_expense = Expenses.objects.filter(
+        user=user
+    ).aggregate(Sum('amount')).get('amount__sum') or 0
+    monthly_income = Income.objects.filter(
+        user=user,
+        added_at__month=current_month
+    ).aggregate(Sum('amount')).get('amount__sum') or 0
+    monthly_expense = Expenses.objects.filter(
+        user=user,
+        added_at__month=current_month
+    ).aggregate(Sum('amount')).get('amount__sum') or 0
 
     return Response({
         'total_income': total_income,
-        'montly_income': monthly_income,
+        'monthly_income': monthly_income,
         'total_expense': total_expense,
         'monthly_expense': monthly_expense
     }, status=status.HTTP_200_OK)
