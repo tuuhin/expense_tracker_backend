@@ -1,8 +1,10 @@
 from rest_framework import serializers
-from .models import Budget, Goal, Notifications, Reminder
+from .models import Budget, Goal, Notifications
 
 
 class GoalSerializers(serializers.ModelSerializer):
+
+    is_accomplished = serializers.ReadOnlyField()
 
     class Meta:
         model = Goal
@@ -10,7 +12,6 @@ class GoalSerializers(serializers.ModelSerializer):
         extra_kwargs = {
             'user': {'write_only': True},
             'collected': {'required': True},
-
         }
 
 
@@ -19,12 +20,16 @@ class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notifications
         fields = '__all__'
-        extra_kwags = {
-            'user': {'write_only': True}
+        extra_kwargs = {
+            'user': {'write_only': True},
         }
 
 
 class BudgetSerializer(serializers.ModelSerializer):
+    has_expired = serializers.ReadOnlyField()
+    amount_left = serializers.ReadOnlyField()
+    amount_used = serializers.ReadOnlyField()
+    expense_count = serializers.ReadOnlyField(source="expenses_set.count")
 
     class Meta:
         model = Budget
@@ -38,13 +43,3 @@ class BudgetSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Start date must be prior to end date.')
         return data
-
-
-class ReminderSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Reminder
-        fields = '__all__'
-        extra_kwargs = {
-            'user': {'write_only': True}
-        }

@@ -8,7 +8,12 @@ class NotificationActions(models.TextChoices):
     BLANK = 'blank'
 
 
-class ReminderChoices(models.TextChoices):
-    INFO = 'info'
-    WARNING = 'warning'
-    ALERT = 'alert'
+class NotificationSignalChoices(models.TextChoices):
+    EXPENSE = "expense"
+    INCOME = "income"
+    SOURCE = "source"
+    CATEGORY = "category"
+    BUDGET = "budget"
+    GOAL = "goal"
+    PROFILE = "profile"
+    UNKNOWN = "unknown"
